@@ -1,0 +1,166 @@
+//import { Navigate } from "react-router-dom";
+
+import { useState, useContext } from "react";
+import { UserContext } from "../contexts/user.context";
+
+
+export function usePosts() {
+
+    const API_URL = import.meta.env.VITE_API_URL;
+
+    const {token, error, setError, message, setMessage} = useContext(UserContext);
+    const [publicaciones, setPublicaciones] = useState([]);
+    const redirectPath = "/home";
+
+
+    // Función para obtener los POSTS
+    const getPosts = async () => {
+        try {
+            //console.log("Token que se envia: ", token);
+
+            const response = await fetch(`${API_URL}/api/home`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    //"Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                //body: JSON.stringify({contenido})           
+            });
+
+            const result = await response.json();
+            //console.log(result.data);
+            
+            if (!response.ok) {
+                //throw new Error("No se pueden cargar las peticiones");
+                const errorResponse = data.message;
+                console.error(`Error al cargar los POSTS: ${errorResponse}`);
+                setError(`Error al cargar los POSTS: ${errorResponse}`);
+
+                return {error: errorResponse};
+            }
+
+            setPublicaciones(result);
+            console.log("POSTS cargados correctamente");
+
+        } catch (err) {
+            console.log(`Error al conectar con el servidor: ${err}`);
+            setError(`Error al conectar con el servidor: ${err}`);
+        }
+    };
+
+    
+    // Función para crear POSTS
+    const create = async (formData/*contenido*/) => {
+
+        //const response = await axios.post(`${API_URL}`/api/signup`, {user});
+        // Llamada al Back End (Laravel)
+        try {
+            const response = await fetch(`${API_URL}/api/create`, {                
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    //"Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                //body: JSON.stringify({formData/*contenido*/})    
+                body: formData       
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                const errorResponse = data.message;
+                console.error(`Error en la creación del POST: ${errorResponse}`);
+                setError(`Error en la creación del POST: ${errorResponse}`);
+            }
+
+            else {
+                console.log("Publicación creada correctamente");
+                setMessage("Publicación creada correctamente");
+                return data;
+            }
+        
+        } catch (err) {
+            console.error(`Error en la petición al servidor: ${err.message}`);
+            setError(`Error en la petición al servidor: ${err.message}`);
+        }
+
+    };
+
+
+    // Función para eliminar POSTS
+    const del = async (id) => {
+
+        // Llamada al BackEnd (Laravel)
+        try {
+            const response = await fetch(`${API_URL}/api/publicaciones/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                const errorResponse = data.message;
+                console.error(`Error eliminando el POST: ${errorResponse}`);
+                setError(`Error eliminando el POST: ${errorResponse}`);
+            }
+
+            else {
+                console.log("Publicación eliminada correctamente");
+                setMessage("Publicación eliminada correctamente");
+                return data;
+            }
+
+        } catch (err) {
+            console.error(`Error en la petición al servidor: ${err.message}`);
+            setError(`Error en la petición al servidor: ${err.message}`);
+        }
+
+    };
+
+
+    // Función para editar POSTS
+    const update = async (postId, formData/*contenido*/) => {
+
+        formData.append("_method", "PUT")
+        // Llamada al BackEnd (Laravel)
+        try {
+            const response = await fetch(`${API_URL}/api/publicaciones/${postId}`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    //"Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                //body: JSON.stringify({ formData/*contenido*/ })
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                const errorResponse = data.message;
+                console.error("Error en la edición del POST: ", errorResponse);
+                setError("Error en la edición del POST: ", errorResponse);
+                return;
+            }
+
+            console.log("Publicación editada correctamente");
+            setMessage("Publicación editada correctamente");
+            return data;
+
+        } catch (err) {
+            console.error(`Error en la petición al servidor: ${err.message}`);
+            setError(`Error en la petición al servidor: ${err.message}`);
+        }
+    };
+
+
+    return {getPosts, create, del, update, publicaciones};
+}
